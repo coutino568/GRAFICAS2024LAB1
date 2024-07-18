@@ -68,6 +68,21 @@ class Renderer(object):
 
     def glClearColor (self, r,g,b):
         self.bgColor = color(r,g,b)
+        
+        
+    def glStar(self,x,y):
+        x=int(x)
+        y=int(y)
+        if (x>= self.viewportX and x <= (self.viewportX+self.viewportW)  and   y>= self.viewportY and y <= self.viewportY+self.viewportH) :
+            self.matrix[y][x] = self.mainColor
+            self.matrix[y-1][x] = self.mainColor
+            self.matrix[y+1][x] = self.mainColor
+            self.matrix[y][x-1] = self.mainColor
+            self.matrix[y][x+1] = self.mainColor
+            
+        # else :
+        #     print("point out of viewport")
+
 
     def glVertex(self,x,y):
         x=int(x)
@@ -137,7 +152,93 @@ class Renderer(object):
         #     x0, x1 = x1, x0
         #     y0, y1 = y1, y0
 
+    
+    def glLine2(self, x0,y0,x1, y1):
+        pixeles = []
+        x0 = int(x0)
+        y0 = int(y0)
+        x1 = int(x1)
+        y1 = int(y1)
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        steep = (dy > dx)
+        offset = 0
+        limit = 0.1
+        
+        
+        
+        
 
+        #para pendientes mayores a 1
+        if steep:
+            x0, y0 = y0, x0
+            x1, y1 = y1, x1
+            
+
+        if x0 > x1:
+            x0, x1 = x1, x0
+            y0, y1 = y1, y0
+        
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        y = y0
+        try:
+            m = dy/dx
+        except:
+            m= 0
+
+        for x in range(x0, x1 + 1):
+            if (steep):
+                pixeles.append([y,x])
+            else:
+                pixeles.append([x,y])
+                
+
+            offset += m
+            if offset >= limit:
+                y += 1 if y0 < y1 else -1
+                limit += 1
+        return pixeles
+    
+    
+    
+    # def glTriangleFilled(self, x0,y0,x1,y1,x2,y2):
+        
+    #     maxx= max(x0,x1,x2)
+    #     minx= min (x0,x1,x2)
+    #     maxy = max (y0,y1,y2)
+    #     miny = min (y0,y1,y2)
+        
+    #     self.glLine(x0,y0,x1,y1)
+    #     self.glLine(x0,y0,x2,y2)
+    #     self.glLine(x2,y2,x1,y1)
+        
+        
+        
+    def glTriangleFilled(self, x0,y0,x1,y1,x2,y2):
+        #linea de A a B
+        self.glLine(x0,y0,x1,y1)
+        #linea de B a C
+        self.glLine(x2,y2,x1,y1)
+        #linea de A a C
+        self.glLine(x0,y0,x2,y2)
+        #coleccionar todos los puntos sobre el trazo A a C
+        #coleccionar todos los puntos sobre el trazo B a C
+        #coleccionar todos los puntos sobre el trazo A a B
+        puntos = self.glLine2(x0,y0,x2,y2)
+        puntos2= self.glLine2(x1,y1,x2,y2)
+        puntos3= self.glLine2(x0,y0,x1,y1)
+        #lanzar una linea de B a toda la coleccion de puntos en la linea AC.
+        # print(puntos)
+        for punto in puntos:
+            self.glLine(x1,y1,punto[0],punto[1])
+        #lanzar una linea de A a toda la coleccion de puntos en la linea BC.
+        for punto in puntos2:
+            self.glLine(x0,y0,punto[0],punto[1])
+        #lanzar una linea de C a toda la coleccion de puntos en la linea AB.
+        for punto in puntos3:
+            self.glLine(x2,y2,punto[0],punto[1])
+        
 
     
     def glFinish(self,filename):
